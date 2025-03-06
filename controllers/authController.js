@@ -23,7 +23,7 @@ const cookieOptions = () => {
     httpOnly: true,  // Prevents JavaScript access (more secure)
     sameSite: "none", // Required for cross-site cookies
     secure: true, // Secure must be true in production
-    path: "/",
+    domain: isProduction ? ".mywheretogo.com" : undefined
   };
 };
 
