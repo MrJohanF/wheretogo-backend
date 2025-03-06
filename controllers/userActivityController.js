@@ -293,11 +293,11 @@ function formatDuration(ms) {
   
   // Format the string based on duration
   if (hours > 0) {
-    return `\${hours}h \${minutes}m`;
+    return `${hours}h ${minutes}m`;
   } else if (minutes > 0) {
-    return `\${minutes}m \${seconds}s`;
+    return `${minutes}m ${seconds}s`;
   } else {
-    return `\${seconds}s`;
+    return `${seconds}s`;
   }
 }
 
