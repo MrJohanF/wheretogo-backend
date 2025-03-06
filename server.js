@@ -16,11 +16,12 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Apply auth middleware globally to identify users
-app.use(authMiddleware);
 
-// Apply activity logger after auth middleware
-app.use(activityLogger);
+// Auth routes (some protected, some public)
+app.use("/api/auth", authRoutes);
+
+// Admin routes (all protected)
+app.use("/api/admin", authMiddleware, adminRoutes); 
 
 
 app.use("/api/auth", authRoutes);

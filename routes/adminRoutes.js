@@ -1,6 +1,5 @@
 // routes/adminRoutes.js
 import express from "express";
-import authMiddleware from "../middleware/auth.js";
 import adminMiddleware from "../middleware/admin.js";
 import { 
   getUserActivity, 
@@ -10,8 +9,7 @@ import {
 
 const router = express.Router();
 
-// Protect all admin routes with authentication & admin check
-router.use(authMiddleware);
+// Only check for admin privileges
 router.use(adminMiddleware);
 
 // User activity endpoints
