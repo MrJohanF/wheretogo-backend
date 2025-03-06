@@ -20,11 +20,11 @@ const createToken = async (userId) => {
 const cookieOptions = () => {
   const isProduction = process.env.NODE_ENV === "production";
   return {
-    httpOnly: true,
-    sameSite: isProduction ? "none" : "lax",
-    domain: "localhost",
-    secure: isProduction,
-    maxAge: 24 * 60 * 60 * 1000
+    httpOnly: true,  // Prevents JavaScript access (more secure)
+    sameSite: "none", // Required for cross-site cookies
+    secure: isProduction, // Secure must be true in production
+    domain: isProduction ? ".herokuapp.com" : undefined, // Match the API domain
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
   };
 };
 
