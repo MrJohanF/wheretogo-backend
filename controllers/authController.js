@@ -33,7 +33,7 @@ const cookieOptions = () => {
 
 // Register a new user
 
-const register = async (req, res) => {
+export const register = async (req, res) => {
     try {
         const validation = registerSchema.safeParse(req.body);
         
