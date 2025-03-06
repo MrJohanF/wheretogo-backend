@@ -2,7 +2,6 @@ import { registerSchema, loginSchema } from "../validation/authSchema.js";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { signJWT } from "jose";
-import { registerSchema, loginSchema } from "../validation/authSchema.js";
 
 const prisma = new PrismaClient();
 
