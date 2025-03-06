@@ -22,6 +22,7 @@ const cookieOptions = () => {
   return {
     httpOnly: true,
     sameSite: isProduction ? "none" : "lax",
+    domain: "localhost",
     secure: isProduction,
     maxAge: 24 * 60 * 60 * 1000
   };
