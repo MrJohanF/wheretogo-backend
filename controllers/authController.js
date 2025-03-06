@@ -24,7 +24,6 @@ const cookieOptions = () => {
     sameSite: "none", // Required for cross-site cookies
     secure: true, // Secure must be true in production
     domain: isProduction ? ".vercel.app" : undefined,
-    maxAge: 24 * 60 * 60 * 1000, // 1 day
   };
 };
 
