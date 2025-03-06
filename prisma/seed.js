@@ -8,7 +8,7 @@ async function main() {
   try {
     // Datos del admin por defecto
     const adminData = {
-      email: 'admin@wheretogo.com',
+      email: 'admin@mywheretogo.com',
       password: 'Admin123',
       name: 'Administrador',
       role: 'ADMIN'
