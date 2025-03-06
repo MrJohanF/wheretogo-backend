@@ -22,10 +22,8 @@ const cookieOptions = () => {
   return {
     httpOnly: true,
     sameSite: isProduction ? "none" : "lax",
-    domain: isProduction ? "wheretogo-beta.vercel.app" : "localhost",
     secure: isProduction,
-    maxAge: 24 * 60 * 60 * 1000,
-    path: "/",
+    maxAge: 24 * 60 * 60 * 1000
   };
 };
 
