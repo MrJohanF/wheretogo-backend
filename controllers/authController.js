@@ -23,7 +23,7 @@ const cookieOptions = () => {
     httpOnly: true,  // Prevents JavaScript access (more secure)
     sameSite: "none", // Required for cross-site cookies
     secure: true, // Secure must be true in production
-    domain: isProduction ? "where-togo-c23a74b35821.herokuapp.com" : undefined,
+    domain: isProduction ? "wheretogo-beta.vercel.app" : undefined,
     path: "/",
   };
 };
