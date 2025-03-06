@@ -1,22 +1,33 @@
-// routes/adminRoutes.js
-import express from "express";
-import authMiddleware from "../middleware/auth.js";
-import adminMiddleware from "../middleware/admin.js"; // You'll need to create this
-import { 
-  getUserActivity, 
-  getActiveUsers, 
-  getDashboardStats 
-} from "../controllers/userActivityController.js";
+// middleware/admin.js
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
-const router = express.Router();
+// This middleware checks if the authenticated user is an admin
+const adminMiddleware = async (req, res, next) => {
+  try {
+    // Assuming the user ID is stored in req.user.id from authMiddleware
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.user.id
+      }
+    });
+    
+    // Check if user has ADMIN role
+    if (!user || user.role !== 'ADMIN') {
+      return res.status(403).json({ 
+        message: "Access denied: Admin privileges required" 
+      });
+    }
+    
+    next();
+  } catch (error) {
+    console.error("Admin middleware error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
-// Protect all admin routes with authentication & admin check
-router.use(authMiddleware);
-router.use(adminMiddleware);
-
-// User activity endpoints
-router.get("/user-activity", getUserActivity);
-router.get("/active-users", getActiveUsers);
-router.get("/dashboard-stats", getDashboardStats);
-
-export default router;
+export default adminMiddleware;

@@ -1,7 +1,7 @@
 // routes/adminRoutes.js
 import express from "express";
 import authMiddleware from "../middleware/auth.js";
-import adminMiddleware from "../middleware/admin.js"; 
+import adminMiddleware from "../middleware/admin.js";
 import { 
   getUserActivity, 
   getActiveUsers, 

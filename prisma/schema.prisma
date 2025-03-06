@@ -15,6 +15,7 @@ model User {
   name          String
   email         String         @unique
   password      String
+  role          Role           @default(USER)
   avatar        String?
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
@@ -276,3 +277,9 @@ model UserPreference {
   @@unique([userId, key])
   @@map("user_preferences")
 }
+
+enum Role {
+  ADMIN
+  USER
+  EDITOR
+} 

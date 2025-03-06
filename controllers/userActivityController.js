@@ -55,7 +55,7 @@ export const getUserActivity = async (req, res) => {
       });
       
       activities = [...activities, ...searches.map(search => ({
-        id: `search_\${search.id}`,
+        id: `search_${search.id}`,
         userId: search.userId,
         user: search.user,
         action: 'Search',
@@ -88,7 +88,7 @@ export const getUserActivity = async (req, res) => {
       });
       
       activities = [...activities, ...pageViews.map(view => ({
-        id: `pageview_\${view.id}`,
+        id: `pageview_${view.id}`,
         userId: view.userId,
         user: view.user,
         action: 'Page View',
@@ -126,7 +126,7 @@ export const getUserActivity = async (req, res) => {
       });
       
       activities = [...activities, ...reservations.map(res => ({
-        id: `reservation_\${res.id}`,
+        id: `reservation_${res.id}`,
         userId: res.userId,
         user: res.user,
         action: 'Reservation',
@@ -169,7 +169,7 @@ export const getUserActivity = async (req, res) => {
       });
       
       activities = [...activities, ...favorites.map(fav => ({
-        id: `favorite_\${fav.userId}_\${fav.placeId}`,
+        id: `favorite_${fav.userId}_${fav.placeId}`,
         userId: fav.userId,
         user: fav.user,
         action: 'Added Favorite',
