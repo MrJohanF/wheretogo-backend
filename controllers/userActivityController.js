@@ -190,6 +190,8 @@ export const getUserActivity = async (req, res) => {
 };
 
 // Get count of currently active users
+// Get currently active users with details
+// Get currently active users with details
 export const getActiveUsers = async (req, res) => {
   try {
     const { timeRange = '24h' } = req.query;
@@ -216,23 +218,95 @@ export const getActiveUsers = async (req, res) => {
         break;
     }
     
-    // Get active users count (users with an active session)
-    const activeUsers = await prisma.userSession.count({
+    // Get active users with details (instead of just count)
+    const activeUserSessions = await prisma.userSession.findMany({
       where: {
         startTime: {
           gte: dateFrom,
         },
         endTime: null, // Session not ended
       },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          }
+        }
+      },
+      select: {
+        id: true,
+        userId: true,
+        startTime: true,
+        ipAddress: true,
+        userAgent: true,
+        user: true
+      },
+      orderBy: {
+        startTime: 'desc'
+      }
     });
     
-    res.json({ activeUsers });
+    // Format the response data and calculate active duration
+    const activeUsers = activeUserSessions.map(session => {
+      // Calculate duration (current time - start time)
+      const durationMs = now - new Date(session.startTime);
+      
+      // Format duration
+      const durationFormatted = formatDuration(durationMs);
+      
+      // Duration in minutes (for sorting or filtering)
+      const durationMinutes = Math.floor(durationMs / (1000 * 60));
+      
+      return {
+        id: session.id,
+        userId: session.userId,
+        name: session.user.name,
+        email: session.user.email,
+        startTime: session.startTime,
+        ipAddress: session.ipAddress || 'Unknown',
+        userAgent: session.userAgent || 'Unknown',
+        activeDuration: durationFormatted,
+        activeMinutes: durationMinutes
+      };
+    });
+    
+    // Also include the total count
+    const totalActiveUsers = activeUsers.length;
+    
+    res.json({ 
+      activeUsers,
+      totalActiveUsers
+    });
     
   } catch (error) {
     console.error("Error fetching active users:", error);
     res.status(500).json({ error: "Failed to fetch active users" });
   }
 };
+
+// Helper function to format duration in a readable way
+function formatDuration(ms) {
+  // Convert milliseconds to seconds
+  let seconds = Math.floor(ms / 1000);
+  
+  // Calculate hours, minutes, and remaining seconds
+  const hours = Math.floor(seconds / 3600);
+  seconds %= 3600;
+  const minutes = Math.floor(seconds / 60);
+  seconds %= 60;
+  
+  // Format the string based on duration
+  if (hours > 0) {
+    return `\${hours}h \${minutes}m`;
+  } else if (minutes > 0) {
+    return `\${minutes}m \${seconds}s`;
+  } else {
+    return `\${seconds}s`;
+  }
+}
+
+
 
 // Get dashboard statistics
 export const getDashboardStats = async (req, res) => {
