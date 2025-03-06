@@ -24,6 +24,7 @@ const cookieOptions = () => {
     sameSite: "none", // Required for cross-site cookies
     secure: true, // Secure must be true in production
     domain: isProduction ? "where-togo-c23a74b35821.herokuapp.com" : undefined,
+    path: "/",
   };
 };
 
