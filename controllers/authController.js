@@ -1,12 +1,13 @@
-import { registerSchema, loginSchema } from "../validation/authSchema.js";
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import { signJWT } from "jose";
+import bcrypt from 'bcryptjs';
+import { PrismaClient } from '@prisma/client';
+import { SignJWT } from 'jose';
+import { registerSchema, loginSchema } from '../validation/authSchema.js';
+
 
 const prisma = new PrismaClient();
 
 const createToken = async ( userId ) => {
-    const token = await new signJWT({ userId})
+    const token = await new SignJWT({ userId})
         .setProtectedHeader({ alg: "HS256" })
         .setExpirationTime("1h")
         .setIssuedAt()
