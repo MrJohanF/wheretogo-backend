@@ -190,8 +190,6 @@ export const getUserActivity = async (req, res) => {
 };
 
 // Get count of currently active users
-// Get currently active users with details
-// Get currently active users with details
 export const getActiveUsers = async (req, res) => {
   try {
     const { timeRange = '24h' } = req.query;
@@ -218,7 +216,7 @@ export const getActiveUsers = async (req, res) => {
         break;
     }
     
-    // Get active users with details (instead of just count)
+    // Get active users with details using just select (not both include and select)
     const activeUserSessions = await prisma.userSession.findMany({
       where: {
         startTime: {
@@ -226,21 +224,18 @@ export const getActiveUsers = async (req, res) => {
         },
         endTime: null, // Session not ended
       },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-          }
-        }
-      },
       select: {
         id: true,
         userId: true,
         startTime: true,
         ipAddress: true,
         userAgent: true,
-        user: true
+        user: {
+          select: {
+            name: true,
+            email: true,
+          }
+        }
       },
       orderBy: {
         startTime: 'desc'
@@ -305,8 +300,6 @@ function formatDuration(ms) {
     return `\${seconds}s`;
   }
 }
-
-
 
 // Get dashboard statistics
 export const getDashboardStats = async (req, res) => {
