@@ -21,9 +21,9 @@ const cookieOptions = () => {
   const isProduction = process.env.NODE_ENV === "production";
   return {
     httpOnly: true,
-    sameSite: isProduction ? "lax" : "none",
+    sameSite: isProduction ? "none" : "lax",
     domain: isProduction ? "wheretogo-beta.vercel.app" : "localhost",
-    secure: isProduction ? true : false,
+    secure: isProduction,
     maxAge: 24 * 60 * 60 * 1000,
     path: "/",
   };
