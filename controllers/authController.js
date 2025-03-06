@@ -149,7 +149,7 @@ export const logout = async (req, res) => {
   try {
 
     // Record user session on logout
-    // End user sessions on logout
+   
     if (req.user?.id) {
         await prisma.userSession.updateMany({
           where: {
