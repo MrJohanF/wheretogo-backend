@@ -23,7 +23,7 @@ const cookieOptions = () => {
     httpOnly: true,  // Prevents JavaScript access (more secure)
     sameSite: "none", // Required for cross-site cookies
     secure: true, // Secure must be true in production
-    domain: isProduction ? "where-togo-c23a74b35821.herokuapp.com" : undefined, // Match the API domain
+    //domain: isProduction ? "where-togo-c23a74b35821.herokuapp.com" : undefined, // Match the API domain
     maxAge: 24 * 60 * 60 * 1000, // 1 day
   };
 };
@@ -169,12 +169,12 @@ export const logout = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 export const me = async (req, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({ message: "No authenticated user found" });
     }
-
     res.status(200).json({
       user: req.user,
     });
