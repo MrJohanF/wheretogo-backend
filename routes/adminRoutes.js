@@ -26,6 +26,15 @@ import {
   deleteSubcategory 
 } from "../controllers/subcategoryController.js";
 
+// Feature endpoints
+import { 
+  createFeature,
+  getAllFeatures,
+  getFeatureById,
+  updateFeature,
+  deleteFeature
+} from "../controllers/featureController.js";
+
 const router = express.Router();
 
 // Only check for admin privileges
@@ -55,5 +64,12 @@ router.get("/subcategories", getAllSubcategories);
 router.get("/subcategories/:id", getSubcategoryById);
 router.put("/subcategories/:id", updateSubcategory);
 router.delete("/subcategories/:id", deleteSubcategory);
+
+// Feature endpoints
+router.post("/features/add", createFeature);
+router.get("/features", getAllFeatures);
+router.get("/features/:id", getFeatureById);
+router.put("/features/:id", updateFeature);
+router.delete("/features/:id", deleteFeature);
 
 export default router;
