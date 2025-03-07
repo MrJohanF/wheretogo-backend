@@ -481,16 +481,6 @@ export const recordActivity = async (req, res) => {
       });
     }
 
-    
-
-    const activity = await prisma.userActivity.create({
-      data: {
-        userId,
-        action,
-        details: details || {},
-        timestamp: new Date(),
-      },
-    });
 
     
     // Create activity with related updates in a transaction
