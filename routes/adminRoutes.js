@@ -17,6 +17,15 @@ import {
   createPlace,
 } from "../controllers/placeController.js";
 
+// Subcategory endpoints
+import { 
+  createSubcategory, 
+  getAllSubcategories, 
+  getSubcategoryById, 
+  updateSubcategory, 
+  deleteSubcategory 
+} from "../controllers/subcategoryController.js";
+
 const router = express.Router();
 
 // Only check for admin privileges
@@ -39,5 +48,12 @@ router.post("/categories/add", createCategory);
 router.get("/categories", getAllCategories);
 router.put("/categories/:id", updateCategory);
 router.delete("/categories/:id", deleteCategory);
+
+// Subcategory endpoints
+router.post("/subcategories/add", createSubcategory);
+router.get("/subcategories", getAllSubcategories);
+router.get("/subcategories/:id", getSubcategoryById);
+router.put("/subcategories/:id", updateSubcategory);
+router.delete("/subcategories/:id", deleteSubcategory);
 
 export default router;
