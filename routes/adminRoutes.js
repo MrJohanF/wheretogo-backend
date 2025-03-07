@@ -15,6 +15,10 @@ import {
 
 import { 
   createPlace,
+  getAllPlaces,
+  getPlaceById,
+  updatePlace,
+  deletePlace
 } from "../controllers/placeController.js";
 
 // PlaceCategory endpoints
@@ -70,11 +74,11 @@ router.get("/active-users", getActiveUsers);
 router.get("/dashboard-stats", getDashboardStats);
 
 // Place endpoints
-//router.get("/places", getPlaces);
-//router.get("/places/:id", getPlaceById);
+router.get("/places", getAllPlaces);
+router.get("/places/:id", getPlaceById);
 router.post("/places/add", createPlace);
-//router.put("/places/:id", updatePlace);
-//router.delete("/places/:id", deletePlace);
+router.put("/places/:id", updatePlace);
+router.delete("/places/:id", deletePlace);
 
 // Category endpoints
 router.post("/categories/add", createCategory);
