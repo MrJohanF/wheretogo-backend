@@ -124,7 +124,7 @@ export const getUserById = async (req, res) => {
     const { id } = req.params;
 
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(id) },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -180,7 +180,7 @@ export const updateUser = async (req, res) => {
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { id: parseInt(id) }
+      where: { id }
     });
 
     if (!existingUser) {
@@ -199,7 +199,7 @@ export const updateUser = async (req, res) => {
       const emailExists = await prisma.user.findFirst({
         where: {
           email,
-          id: { not: parseInt(id) }
+          id: { not: id }
         }
       });
 
@@ -231,7 +231,7 @@ export const updateUser = async (req, res) => {
 
     // Update the user
     const updatedUser = await prisma.user.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: updateData,
       select: {
         id: true,
@@ -266,7 +266,7 @@ export const deleteUser = async (req, res) => {
 
     // Check if user exists
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(id) }
+      where: { id }
     });
 
     if (!user) {
@@ -280,27 +280,27 @@ export const deleteUser = async (req, res) => {
     await prisma.$transaction(async (prisma) => {
       // Delete user's reviews
       await prisma.review.deleteMany({
-        where: { userId: parseInt(id) }
+        where: { userId: id }
       });
 
       // Delete user's favorites
       await prisma.favorite.deleteMany({
-        where: { userId: parseInt(id) }
+        where: { userId: id }
       });
 
       // Delete user's reservations
       await prisma.reservation.deleteMany({
-        where: { userId: parseInt(id) }
+        where: { userId: id }
       });
 
       // Delete user's activity logs
       await prisma.userActivity.deleteMany({
-        where: { userId: parseInt(id) }
+        where: { userId: id }
       });
 
       // Finally delete the user
       await prisma.user.delete({
-        where: { id: parseInt(id) }
+        where: { id }
       });
     });
 
