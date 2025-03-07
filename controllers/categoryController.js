@@ -149,15 +149,24 @@ export const updateCategory = async (req, res) => {
 export const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
+    const categoryId = parseInt(id);
 
-    // Delete the category and all related subcategories (cascade delete is handled by Prisma)
-    await prisma.category.delete({
-      where: { id: parseInt(id) }
+    // Use a transaction to ensure both operations succeed or fail together
+    await prisma.$transaction(async (prisma) => {
+      // First, delete all subcategories
+      await prisma.subcategory.deleteMany({
+        where: { categoryId }
+      });
+
+      // Then delete the category
+      await prisma.category.delete({
+        where: { id: categoryId }
+      });
     });
 
     return res.json({
       success: true,
-      message: "Category deleted successfully"
+      message: "Category and its subcategories deleted successfully"
     });
 
   } catch (error) {
