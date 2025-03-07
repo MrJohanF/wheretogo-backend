@@ -25,6 +25,14 @@ import {
   removeCategoryFromPlace
 } from "../controllers/placeCategoryController.js";
 
+// PlaceFeature endpoints
+import {
+  addFeatureToPlace,
+  getPlaceFeatures,
+  getFeaturePlaces,
+  removeFeatureFromPlace
+} from "../controllers/placeFeatureController.js";
+
 // Subcategory endpoints
 import { 
   createSubcategory, 
@@ -71,6 +79,12 @@ router.post("/place-categories/add", addCategoryToPlace);
 router.get("/places/:placeId/categories", getPlaceCategories);
 router.get("/categories/:categoryId/places", getCategoryPlaces);
 router.delete("/places/:placeId/categories/:categoryId", removeCategoryFromPlace);
+
+// PlaceFeature endpoints
+router.post("/place-features/add", addFeatureToPlace);
+router.get("/places/:placeId/features", getPlaceFeatures);
+router.get("/features/:featureId/places", getFeaturePlaces);
+router.delete("/places/:placeId/features/:featureId", removeFeatureFromPlace);
 
 // Subcategory endpoints
 router.post("/subcategories/add", createSubcategory);
