@@ -8,7 +8,9 @@ import {
 } from "../controllers/userActivityController.js";
 import { 
   createCategory,
-  getAllCategories
+  getAllCategories,
+  updateCategory,
+  deleteCategory
 } from "../controllers/categoryController.js";
 
 import { 
@@ -35,5 +37,7 @@ router.post("/places/add", createPlace);
 // Category endpoints
 router.post("/categories/add", createCategory);
 router.get("/categories", getAllCategories);
+router.put("/categories/:id", updateCategory);
+router.delete("/categories/:id", deleteCategory);
 
 export default router;
