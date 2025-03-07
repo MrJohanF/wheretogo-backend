@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
 import authMiddleware from "./middleware/auth.js";
 import adminRoutes from "./routes/adminRoutes.js"; 
+import publicRoutes from "./routes/publicRoutes.js";
 import activityRoutes from "./routes/activityRoutes.js";
 import activityLogger from "./middleware/activityLogger.js";
 
@@ -17,6 +18,8 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Public routes (no authentication required)
+app.use("/api", publicRoutes);
 
 // Auth routes (some protected, some public)
 app.use("/api/auth", authRoutes);
