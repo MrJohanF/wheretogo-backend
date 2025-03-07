@@ -7,12 +7,12 @@ import {
   getDashboardStats 
 } from "../controllers/userActivityController.js";
 import { 
-  createCategory
+  createCategory,
+  getAllCategories
 } from "../controllers/categoryController.js";
 
 import { 
   createPlace,
-  getAllCategories
 } from "../controllers/placeController.js";
 
 const router = express.Router();
