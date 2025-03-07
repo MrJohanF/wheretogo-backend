@@ -14,6 +14,6 @@ router.get("/places", getAllPlaces);
 router.get("/places/:id", getPlaceById);
 
 // Public get all places by category
-router.get("/categories/:id/places", getCategoryPlaces);
+router.get("/categories/:categoryId/places", getCategoryPlaces);
 
 export default router; 
