@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
 import authMiddleware from "./middleware/auth.js";
 import adminRoutes from "./routes/adminRoutes.js"; 
+import activityRoutes from "./routes/activityRoutes.js";
 import activityLogger from "./middleware/activityLogger.js";
 
 const app = express();
@@ -23,9 +24,8 @@ app.use("/api/auth", authRoutes);
 // Admin routes (all protected)
 app.use("/api/admin", authMiddleware, adminRoutes); 
 
-
-app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes); 
+// Activity tracking routes (all protected)
+app.use("/api", activityRoutes);
 
 app.get("/api/protected", (req, res) => {
   if (!req.user) {
