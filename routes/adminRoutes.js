@@ -6,6 +6,9 @@ import {
   getActiveUsers, 
   getDashboardStats 
 } from "../controllers/userActivityController.js";
+import { 
+  createCategory
+} from "../controllers/categoryController.js";
 
 import { 
   createPlace
@@ -27,5 +30,8 @@ router.get("/dashboard-stats", getDashboardStats);
 router.post("/places/add", createPlace);
 //router.put("/places/:id", updatePlace);
 //router.delete("/places/:id", deletePlace);
+
+// Category endpoints
+router.post("/categories/add", createCategory);
 
 export default router;
