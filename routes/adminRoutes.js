@@ -21,6 +21,15 @@ import {
   deletePlace
 } from "../controllers/placeController.js";
 
+// User management endpoints
+import {
+  createUser,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser
+} from "../controllers/adminUserController.js";
+
 // PlaceCategory endpoints
 import {
   addCategoryToPlace,
@@ -72,6 +81,13 @@ router.use(adminMiddleware);
 router.get("/user-activity", getUserActivity);
 router.get("/active-users", getActiveUsers);
 router.get("/dashboard-stats", getDashboardStats);
+
+// User management endpoints
+router.post("/users", createUser);
+router.get("/users", getAllUsers);
+router.get("/users/:id", getUserById);
+router.put("/users/:id", updateUser);
+router.delete("/users/:id", deleteUser);
 
 // Place endpoints
 router.get("/places", getAllPlaces);
