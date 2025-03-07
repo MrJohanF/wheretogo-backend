@@ -11,7 +11,8 @@ import {
 } from "../controllers/categoryController.js";
 
 import { 
-  createPlace
+  createPlace,
+  getAllCategories
 } from "../controllers/placeController.js";
 
 const router = express.Router();
@@ -33,5 +34,6 @@ router.post("/places/add", createPlace);
 
 // Category endpoints
 router.post("/categories/add", createCategory);
+router.get("/categories", getAllCategories);
 
 export default router;
