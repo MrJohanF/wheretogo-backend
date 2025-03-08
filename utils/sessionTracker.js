@@ -1,6 +1,6 @@
 // utils/sessionTracker.js
 import { prisma } from "../prisma/prisma.js";
-import UAParser from "ua-parser-js";
+import {UAParser} from "ua-parser-js";
 import axios from "axios";
 
 // Create or update a user session
