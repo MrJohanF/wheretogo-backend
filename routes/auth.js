@@ -1,67 +1,52 @@
-// middleware/auth.js
-import { jwtVerify } from "jose";
-import { prisma } from "../prisma/prisma.js";
-import { updateSessionActivity } from "../utils/sessionTracker.js";
+// routes/auth.js
+import express from "express";
+import authMiddleware from "../middleware/auth.js";
+import activityLogger from "../middleware/activityLogger.js";
+import { register, login, logout, me } from "../controllers/authController.js";
+import { 
+  setup2FA, 
+  verify2FA, 
+  disable2FA,
+  getUserSessions, 
+  endSession,
+  endAllOtherSessions
+} from "../controllers/twoFactorController.js";
+import {
+    getUserPreferences,
+    getUserPreference,
+    setUserPreference,
+    deleteUserPreference,
+    deleteAllUserPreferences
+} from "../controllers/preferenceController.js";
 
-const authMiddleware = async (req, res, next) => {
-    try {
-        // Get the token from the cookies
-        const token = req.cookies.token;
+const router = express.Router();
 
-        // If no token, return unauthorized
-        if (!token) {
-            return res.status(401).json({ message: "No token provided" });
-        }
+// Public routes (no auth required)
+router.post("/register", register);
+router.post("/login", login);
 
-        // Verify the token
-        const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
-        
-        // Fetch the user from the database
-        const user = await prisma.user.findUnique({
-            where: { id: payload.userId },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                role: true,
-                createdAt: true,
-                updatedAt: true,
-            }
-        });
+// Auth middleware chain
+const auth = [authMiddleware, activityLogger];
 
-        // If no user, return unauthorized
-        if (!user) {
-            return res.status(401).json({ message: "User not found" });
-        }
-        
-        // If we have a session ID in the token
-        if (payload.sessionId) {
-            req.sessionId = payload.sessionId;
-            
-            // Check if session is still active
-            const session = await prisma.userSession.findUnique({
-                where: { id: parseInt(payload.sessionId) },
-                select: { isActive: true }
-            });
-            
-            if (!session || !session.isActive) {
-                return res.status(401).json({ message: "Session expired" });
-            }
-            
-            // Update activity timestamp
-            await updateSessionActivity(payload.sessionId);
-        }
+// Protected routes
+router.post("/logout", ...auth, logout);
+router.get("/me", ...auth, me);
 
-        // Attach the user to the request
-        req.user = user;
+// 2FA routes
+router.post("/2fa/setup", ...auth, setup2FA);
+router.post("/2fa/verify", ...auth, verify2FA);
+router.post("/2fa/disable", ...auth, disable2FA);
 
-        // Continue to the next middleware
-        next();
-    } catch (error) {
-        // If there is an error, return unauthorized
-        console.error("Authentication error:", error);
-        return res.status(401).json({ message: "Invalid token" });
-    }
-};
+// Session management
+router.get("/sessions", ...auth, getUserSessions);
+router.delete("/sessions/:sessionId", ...auth, endSession);
+router.delete("/sessions", ...auth, endAllOtherSessions);
 
-export default authMiddleware;
+// Existing preference routes
+router.get("/api/preferences", ...auth, getUserPreferences);
+router.get("/api/preferences/:key", ...auth, getUserPreference);
+router.post("/api/preferences", ...auth, setUserPreference);
+router.delete("/api/preferences/:key", ...auth, deleteUserPreference);
+router.delete("/api/preferences", ...auth, deleteAllUserPreferences);
+
+export default router;
