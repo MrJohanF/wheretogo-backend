@@ -2,7 +2,6 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../prisma/prisma.js";
 import { z } from "zod";
 
-const prisma = new PrismaClient();
 
 // Validation schema for creating a user
 const createUserSchema = z.object({

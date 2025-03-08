@@ -1,9 +1,6 @@
 import {jwtVerify} from "jose";
 import { prisma } from "../prisma/prisma.js";
 
-const prisma = new PrismaClient();
-
-
 const authMiddleware = async (req, res, next) => {
     try {
 

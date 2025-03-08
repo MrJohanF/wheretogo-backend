@@ -3,8 +3,6 @@ import { prisma } from "../prisma/prisma.js";
 import { SignJWT } from "jose";
 import { registerSchema, loginSchema } from "../validation/authSchema.js";
 
-const prisma = new PrismaClient();
-
 const createToken = async (userId) => {
   const token = await new SignJWT({ userId })
     .setProtectedHeader({ alg: "HS256" })
@@ -23,6 +21,7 @@ const cookieOptions = () => {
     httpOnly: true,  // Prevents JavaScript access (more secure)
     sameSite: "none", // Required for cross-site cookies
     secure: true, // Secure must be true in production
+    domain: isProduction ? "mywheretogo.com" : "localhost",
     path: "/"
   };
 };

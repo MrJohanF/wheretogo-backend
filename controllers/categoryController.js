@@ -1,5 +1,4 @@
 import { prisma } from "../prisma/prisma.js";
-const prisma = new PrismaClient();
 
 // Create a new category
 export const createCategory = async (req, res) => {

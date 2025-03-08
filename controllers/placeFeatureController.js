@@ -1,5 +1,5 @@
 import { prisma } from "../prisma/prisma.js";
-const prisma = new PrismaClient();
+
 
 // Add a feature to a place
 export const addFeatureToPlace = async (req, res) => {

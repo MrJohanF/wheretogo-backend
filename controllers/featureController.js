@@ -1,7 +1,6 @@
 import { prisma } from "../prisma/prisma.js";
 import { featureSchema } from "../validation/featureSchema.js";
 
-const prisma = new PrismaClient();
 
 // Create a new feature
 export const createFeature = async (req, res) => {

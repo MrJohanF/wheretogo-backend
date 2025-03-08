@@ -1,5 +1,4 @@
 import { prisma } from "../prisma/prisma.js";
-const prisma = new PrismaClient();
 
 // Get all places
 export const getAllPlaces = async (req, res) => {

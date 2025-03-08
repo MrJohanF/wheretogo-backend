@@ -1,6 +1,5 @@
 // middleware/admin.js
 import { prisma } from "../prisma/prisma.js";
-const prisma = new PrismaClient();
 
 // This middleware checks if the authenticated user is an admin
 const adminMiddleware = async (req, res, next) => {
