@@ -1,5 +1,5 @@
 // controllers/userActivityController.js
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../prisma/prisma.js";
 const prisma = new PrismaClient();
 
 // Get user activities based on filter and time range

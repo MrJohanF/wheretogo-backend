@@ -1,5 +1,5 @@
 // middleware/activityLogger.js
-import { PrismaClient } from '@prisma/client';
+import { prisma } from "../prisma/prisma.js";
 const prisma = new PrismaClient();
 
 const activityLogger = async (req, res, next) => {

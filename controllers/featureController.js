@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../prisma/prisma.js";
 import { featureSchema } from "../validation/featureSchema.js";
 
 const prisma = new PrismaClient();

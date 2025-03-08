@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../prisma/prisma.js";
 import { SignJWT } from "jose";
 import { registerSchema, loginSchema } from "../validation/authSchema.js";
 
