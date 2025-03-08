@@ -1,4 +1,6 @@
-import {jwtVerify} from "jose";
+// middleware/auth.js
+
+import { jwtVerify } from "jose";
 import { prisma } from "../prisma/prisma.js";
 
 const authMiddleware = async (req, res, next) => {

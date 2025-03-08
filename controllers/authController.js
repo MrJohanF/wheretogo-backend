@@ -1,3 +1,5 @@
+// controllers/authController.js
+
 import bcrypt from "bcryptjs";
 import { prisma } from "../prisma/prisma.js";
 import { SignJWT } from "jose";
