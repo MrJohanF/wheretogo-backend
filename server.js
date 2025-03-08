@@ -11,7 +11,10 @@ import activityLogger from "./middleware/activityLogger.js";
 const app = express();
 
 app.use(cors({ 
-  origin: process.env.NODE_ENV === 'production' ? process.env.CLIENT_URL : "https://localhost:3443",
+  origin: [
+   "http://localhost:3443",
+   `${process.env.CLIENT_URL}`
+   ],
   credentials: true
  }));
 
