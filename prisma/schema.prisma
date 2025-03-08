@@ -11,36 +11,50 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String
-  email         String         @unique
-  password      String
-  role          Role           @default(USER)
-  avatar        String?
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  reviews       Review[]
-  favorites     Favorite[]
-  categoryFavs  CategoryFavorite[]
-  reservations  Reservation[]
-  searchHistory SearchHistory[]
-  sessions      UserSession[]
-  pageViews     PageView[]
-  activities    UserActivity[]
-  preferences   UserPreference[]
+  id               String                @id @default(cuid())
+  name             String
+  email            String                @unique
+  password         String
+  role             Role                  @default(USER)
+  avatar           String?
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
+  twoFactorEnabled Boolean               @default(false) @map("two_factor_enabled")
+  twoFactorSecret  String?               @map("two_factor_secret")
+  backupCodes      TwoFactorBackupCode[]
+  reviews          Review[]
+  favorites        Favorite[]
+  categoryFavs     CategoryFavorite[]
+  reservations     Reservation[]
+  searchHistory    SearchHistory[]
+  sessions         UserSession[]
+  pageViews        PageView[]
+  activities       UserActivity[]
+  preferences      UserPreference[]
 
   @@map("users")
 }
 
+model TwoFactorBackupCode {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  code      String   
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("two_factor_backup_codes")
+}
+
 model Category {
-  id            Int               @id @default(autoincrement())
+  id            Int                @id @default(autoincrement())
   name          String
   icon          String
   description   String?
   image         String?
   color         String?
-  count         Int               @default(0)
-  isTrending    Boolean           @default(false) @map("is_trending")
+  count         Int                @default(0)
+  isTrending    Boolean            @default(false) @map("is_trending")
   subcategories Subcategory[]
   places        PlaceCategory[]
   favorites     CategoryFavorite[]
@@ -49,50 +63,50 @@ model Category {
 }
 
 model Subcategory {
-  id          Int               @id @default(autoincrement())
-  name        String
-  categoryId  Int               @map("category_id")
-  category    Category          @relation(fields: [categoryId], references: [id])
-  places      PlaceSubcategory[]
+  id         Int                @id @default(autoincrement())
+  name       String
+  categoryId Int                @map("category_id")
+  category   Category           @relation(fields: [categoryId], references: [id])
+  places     PlaceSubcategory[]
 
   @@map("subcategories")
 }
 
 model Place {
-  id              Int               @id @default(autoincrement())
-  name            String
-  description     String?
-  rating          Float?
-  priceLevel      String?           @map("price_level")
-  address         String
-  phone           String?
-  website         String?
-  cuisine         String?
-  isOpenNow       Boolean?          @default(false) @map("is_open_now")
-  latitude        Float?
-  longitude       Float?
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
-  categories      PlaceCategory[]
-  subcategories   PlaceSubcategory[]
-  images          Image[]
-  reviews         Review[]
-  operatingHours  OperatingHour[]
-  favorites       Favorite[]
-  reservations    Reservation[]
-  popularItems    PopularItem[]
-  similarTo       SimilarPlace[]    @relation("place_to_similar")
-  similarFrom     SimilarPlace[]    @relation("similar_to_place")
-  features        PlaceFeature[]
+  id             Int                @id @default(autoincrement())
+  name           String
+  description    String?
+  rating         Float?
+  priceLevel     String?            @map("price_level")
+  address        String
+  phone          String?
+  website        String?
+  cuisine        String?
+  isOpenNow      Boolean?           @default(false) @map("is_open_now")
+  latitude       Float?
+  longitude      Float?
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+  categories     PlaceCategory[]
+  subcategories  PlaceSubcategory[]
+  images         Image[]
+  reviews        Review[]
+  operatingHours OperatingHour[]
+  favorites      Favorite[]
+  reservations   Reservation[]
+  popularItems   PopularItem[]
+  similarTo      SimilarPlace[]     @relation("place_to_similar")
+  similarFrom    SimilarPlace[]     @relation("similar_to_place")
+  features       PlaceFeature[]
 
   @@map("places")
 }
 
 model PlaceCategory {
-  placeId     Int      @map("place_id")
-  categoryId  Int      @map("category_id")
-  place       Place    @relation(fields: [placeId], references: [id])
-  category    Category @relation(fields: [categoryId], references: [id])
+  placeId    Int      @map("place_id")
+  categoryId Int      @map("category_id")
+  place      Place    @relation(fields: [placeId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
 
   @@id([placeId, categoryId])
   @@map("place_categories")
@@ -109,36 +123,36 @@ model PlaceSubcategory {
 }
 
 model Image {
-  id        Int     @id @default(autoincrement())
-  placeId   Int     @map("place_id")
-  url       String
-  altText   String? @map("alt_text")
+  id         Int     @id @default(autoincrement())
+  placeId    Int     @map("place_id")
+  url        String
+  altText    String? @map("alt_text")
   isFeatured Boolean @default(false) @map("is_featured")
-  place     Place   @relation(fields: [placeId], references: [id])
+  place      Place   @relation(fields: [placeId], references: [id])
 
   @@map("images")
 }
 
 model OperatingHour {
-  id         Int    @id @default(autoincrement())
-  placeId    Int    @map("place_id")
-  day        String
+  id          Int    @id @default(autoincrement())
+  placeId     Int    @map("place_id")
+  day         String
   openingTime String @map("opening_time")
   closingTime String @map("closing_time")
-  place      Place  @relation(fields: [placeId], references: [id])
+  place       Place  @relation(fields: [placeId], references: [id])
 
   @@map("operating_hours")
 }
 
 model Review {
-  id        Int      @id @default(autoincrement())
-  placeId   Int      @map("place_id")
-  userId    String   @map("user_id")
-  rating    Int
-  comment   String?
-  date      DateTime
-  place     Place    @relation(fields: [placeId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  id      Int      @id @default(autoincrement())
+  placeId Int      @map("place_id")
+  userId  String   @map("user_id")
+  rating  Int
+  comment String?
+  date    DateTime
+  place   Place    @relation(fields: [placeId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
 
   @@map("reviews")
 }
@@ -194,11 +208,11 @@ model PopularItem {
 }
 
 model SimilarPlace {
-  placeId        Int   @map("place_id")
-  similarPlaceId Int   @map("similar_place_id")
+  placeId         Int   @map("place_id")
+  similarPlaceId  Int   @map("similar_place_id")
   similarityScore Float @default(0) @map("similarity_score")
-  place          Place @relation("place_to_similar", fields: [placeId], references: [id])
-  similarPlace   Place @relation("similar_to_place", fields: [similarPlaceId], references: [id])
+  place           Place @relation("place_to_similar", fields: [placeId], references: [id])
+  similarPlace    Place @relation("similar_to_place", fields: [similarPlaceId], references: [id])
 
   @@id([placeId, similarPlaceId])
   @@map("similar_places")
@@ -233,13 +247,17 @@ model SearchHistory {
 }
 
 model UserSession {
-  id        Int      @id @default(autoincrement())
-  userId    String   @map("user_id")
-  startTime DateTime @default(now()) @map("start_time")
-  endTime   DateTime? @map("end_time")
-  ipAddress String?  @map("ip_address")
-  userAgent String?  @map("user_agent")
-  user      User     @relation(fields: [userId], references: [id])
+  id            Int       @id @default(autoincrement())
+  userId        String    @map("user_id")
+  startTime     DateTime  @default(now()) @map("start_time")
+  endTime       DateTime? @map("end_time")
+  ipAddress     String?   @map("ip_address")
+  userAgent     String?   @map("user_agent")
+  location      String?   // e.g., "Bogota, Colombia"
+  deviceName    String?   @map("device_name") // e.g., "Chrome on Windows"
+  isActive      Boolean   @default(true) @map("is_active")
+  lastActivity  DateTime  @default(now()) @map("last_activity")
+  user          User      @relation(fields: [userId], references: [id])
 
   @@map("user_sessions")
 }
@@ -249,7 +267,7 @@ model PageView {
   userId    String   @map("user_id")
   path      String
   timestamp DateTime @default(now())
-  duration  Int?     // Duration in seconds
+  duration  Int? // Duration in seconds
   user      User     @relation(fields: [userId], references: [id])
 
   @@map("page_views")
@@ -259,7 +277,7 @@ model UserActivity {
   id        Int      @id @default(autoincrement())
   userId    String   @map("user_id")
   action    String
-  details   Json?    // Flexible JSON field for additional activity details
+  details   Json? // Flexible JSON field for additional activity details
   timestamp DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
 
@@ -282,4 +300,4 @@ enum Role {
   ADMIN
   USER
   EDITOR
-} 
+}
