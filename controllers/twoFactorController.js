@@ -106,10 +106,10 @@ export const getUserSessions = async (req, res) => {
 // Get a specific session by ID
 export const getSessionById = async (req, res) => {
   try {
-    const { sessionId } = req.params;
+    const { userId } = req.params;
     
     const session = await prisma.userSession.findUnique({
-      where: { id: parseInt(sessionId) },
+      where: { userId: userId },
       select: {
         id: true,
         userId: true,

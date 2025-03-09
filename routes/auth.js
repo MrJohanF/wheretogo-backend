@@ -40,9 +40,12 @@ router.post("/2fa/disable", ...auth, disable2FA);
 
 // Session management
 router.get("/sessions", ...auth, getUserSessions);
-router.get("/sessions/:sessionId", ...auth, getSessionById);
 router.delete("/sessions/:sessionId", ...auth, endSession);
 router.delete("/sessions", ...auth, endAllOtherSessions);
+
+// Session by user id
+router.get("/sessions/:userId", ...auth, getSessionById);
+
 
 // Existing preference routes
 router.get("/api/preferences", ...auth, getUserPreferences);
