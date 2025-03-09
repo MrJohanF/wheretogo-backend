@@ -19,6 +19,7 @@ import {
     deleteUserPreference,
     deleteAllUserPreferences
 } from "../controllers/preferenceController.js";
+import { getFullUserProfile } from "../controllers/userProfileController.js";
 
 const router = express.Router();
 
@@ -32,6 +33,9 @@ const auth = [authMiddleware, activityLogger];
 // Protected routes
 router.post("/logout", ...auth, logout);
 router.get("/me", ...auth, me);
+
+// User profile route
+router.get("/profile/:userId", ...auth, getFullUserProfile);
 
 // 2FA routes
 router.post("/2fa/setup", ...auth, setup2FA);
