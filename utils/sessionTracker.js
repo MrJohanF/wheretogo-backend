@@ -67,13 +67,13 @@ function parseUserAgent(userAgent) {
     
     if (os.name) {
       if (device.type === "mobile" || device.type === "tablet") {
-        deviceName += ` on \${device.vendor || ""} \${device.model || os.name}`.trim();
+        deviceName += ` on ${device.vendor || ""} ${device.model || os.name}`.trim();
       } else {
-        deviceName += ` on \${os.name}`;
+        deviceName += ` on ${os.name}`;
       }
     }
   } else {
-    deviceName = device.vendor ? `\${device.vendor} \${device.model}` : os.name || "Unknown Device";
+    deviceName = device.vendor ? `${device.vendor} ${device.model}` : os.name || "Unknown Device";
   }
   
   return { deviceName };
@@ -86,9 +86,9 @@ async function getLocationFromIp(ip) {
   }
   
   try {
-    const response = await axios.get(`https://ipinfo.io/\${ip}?token=d54e5eec392442`);
+    const response = await axios.get(`https://ipinfo.io/${ip}?token=d54e5eec392442`);
     if (response.data) {
-      return `\${response.data.city || ""}, \${response.data.country || ""}`.trim();
+      return `${response.data.city || ""}, ${response.data.country || ""}`.trim();
     }
     return "Unknown location";
   } catch (error) {
