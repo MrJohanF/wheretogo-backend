@@ -52,10 +52,10 @@ router.get("/sessions/:userId", ...auth, getSessionById);
 
 
 // Existing preference routes
-router.get("/api/preferences", ...auth, getUserPreferences);
-router.get("/api/preferences/:key", ...auth, getUserPreference);
-router.post("/api/preferences", ...auth, setUserPreference);
-router.delete("/api/preferences/:key", ...auth, deleteUserPreference);
-router.delete("/api/preferences", ...auth, deleteAllUserPreferences);
+router.get("/preferences/:userId", ...auth, getUserPreferences);
+router.get("/preferences/:userId/:key", ...auth, getUserPreference);
+router.post("/preferences/:userId", ...auth, setUserPreference);
+router.delete("/preferences/:userId/:key", ...auth, deleteUserPreference);
+router.delete("/preferences/:userId", ...auth, deleteAllUserPreferences);
 
 export default router;

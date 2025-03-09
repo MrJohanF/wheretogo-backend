@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 // Get all preferences for a user
 export const getUserPreferences = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.params;
 
     const preferences = await prisma.userPreference.findMany({
       where: { userId }
