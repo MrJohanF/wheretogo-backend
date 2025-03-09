@@ -7,10 +7,17 @@ import adminRoutes from "./routes/adminRoutes.js";
 import publicRoutes from "./routes/publicRoutes.js";
 import activityRoutes from "./routes/activityRoutes.js";
 import activityLogger from "./middleware/activityLogger.js";
+import morgan from "morgan";
 
 const app = express();
 
 const isProd = process.env.NODE_ENV === 'production';
+
+
+// Usar morgan solo en desarrollo
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("dev"));
+}
 
 app.use(cors({ 
   origin: isProd 

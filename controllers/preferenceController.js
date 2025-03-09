@@ -6,11 +6,27 @@ const prisma = new PrismaClient();
 // Get all preferences for a user
 export const getUserPreferences = async (req, res) => {
   try {
-    const userId = req.params;
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required"
+      });
+    }
 
     const preferences = await prisma.userPreference.findMany({
-      where: { userId }
+      where: {
+        userId: userId
+      }
     });
+
+    if (preferences.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No preferences found for this user"
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -64,6 +80,14 @@ export const getUserPreference = async (req, res) => {
 export const setUserPreference = async (req, res) => {
   try {
     const validation = preferenceSchema.safeParse(req.body);
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required"
+      });
+    }
 
     if (!validation.success) {
       return res.status(400).json({
@@ -74,7 +98,6 @@ export const setUserPreference = async (req, res) => {
     }
 
     const { key, value } = validation.data;
-    const userId = req.user.userId;
 
     const preference = await prisma.userPreference.upsert({
       where: {
