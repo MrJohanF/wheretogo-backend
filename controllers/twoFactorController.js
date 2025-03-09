@@ -103,6 +103,43 @@ export const getUserSessions = async (req, res) => {
   }
 };
 
+// Get a specific session by ID
+export const getSessionById = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    
+    const session = await prisma.userSession.findUnique({
+      where: { id: parseInt(sessionId) },
+      select: {
+        id: true,
+        userId: true,
+        ipAddress: true,
+        deviceName: true,
+        location: true,
+        lastActivity: true,
+        startTime: true,
+        endTime: true,
+        isActive: true,
+        userAgent: true
+      }
+    });
+    
+    if (!session) {
+      return res.status(404).json({ message: "Session not found" });
+    }
+
+    // Make sure user owns the session
+    if (session.userId !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    
+    res.status(200).json({ session });
+  } catch (error) {
+    console.error("Error retrieving session:", error);
+    res.status(500).json({ message: "Error retrieving session" });
+  }
+};
+
 // End a specific session
 export const endSession = async (req, res) => {
   try {
