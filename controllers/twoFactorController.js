@@ -92,24 +92,35 @@ export const getUserSessions = async (req, res) => {
         deviceName: true,
         location: true,
         lastActivity: true,
-        startTime: true
+        startTime: true,
+        userAgent: true,
+        isActive: true
       }
     });
     
-    res.status(200).json({ sessions });
+    return res.status(200).json({
+      success: true,
+      sessions
+    });
   } catch (error) {
     console.error("Error retrieving sessions:", error);
-    res.status(500).json({ message: "Error retrieving sessions" });
+    return res.status(500).json({
+      success: false,
+      message: "Error retrieving sessions"
+    });
   }
 };
 
-// Get a specific session by ID
+// Get a specific session by user ID
 export const getSessionById = async (req, res) => {
   try {
-    const { userId } = req.params;
-    
-    const session = await prisma.userSession.findUnique({
-      where: { userId: userId },
+    const userId = req.user.id;
+
+    const sessions = await prisma.userSession.findMany({
+      where: {
+        userId: userId,
+        isActive: true
+      },
       select: {
         id: true,
         userId: true,
@@ -123,20 +134,25 @@ export const getSessionById = async (req, res) => {
         userAgent: true
       }
     });
-    
-    if (!session) {
-      return res.status(404).json({ message: "Session not found" });
+
+    if (!sessions || sessions.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No active sessions found"
+      });
     }
 
-    // Make sure user owns the session
-    if (session.userId !== req.user.id) {
-      return res.status(403).json({ message: "Unauthorized" });
-    }
-    
-    res.status(200).json({ session });
+    return res.status(200).json({
+      success: true,
+      sessions
+    });
+
   } catch (error) {
-    console.error("Error retrieving session:", error);
-    res.status(500).json({ message: "Error retrieving session" });
+    console.error("Error retrieving sessions:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve sessions"
+    });
   }
 };
 
