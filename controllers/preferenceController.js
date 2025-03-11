@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { preferenceSchema, preferenceKeySchema } from "../validation/preferenceSchema.js";
+import { DEFAULT_PREFERENCES } from "../utils/defaultPreferences.js";
+import { getUserPreferencesWithDefaults } from "../utils/userPreferences.js";
 
 const prisma = new PrismaClient();
 
@@ -15,22 +17,32 @@ export const getUserPreferences = async (req, res) => {
       });
     }
 
-    const preferences = await prisma.userPreference.findMany({
-      where: {
-        userId: userId
-      }
+    // Check if user exists
+    const userExists = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true }
     });
 
-    if (preferences.length === 0) {
+    if (!userExists) {
       return res.status(404).json({
         success: false,
-        message: "No preferences found for this user"
+        message: "User not found"
       });
     }
 
+    // Get preferences with defaults as fallback
+    const preferences = await getUserPreferencesWithDefaults(userId);
+    
+    // Format as array of preference objects to match your API format
+    const formattedPrefs = Object.entries(preferences).map(([key, value]) => ({
+      userId,
+      key,
+      value
+    }));
+
     return res.status(200).json({
       success: true,
-      data: preferences
+      data: formattedPrefs
     });
   } catch (error) {
     console.error("Error getting user preferences:", error);

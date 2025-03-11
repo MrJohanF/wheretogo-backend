@@ -1,5 +1,6 @@
 // controllers/authController.js
 import bcrypt from "bcryptjs";
+import { setupDefaultPreferences } from "../utils/userPreferences.js";
 import { prisma } from "../prisma/prisma.js";
 import { SignJWT } from "jose";
 import { registerSchema } from "../validation/authSchema.js";
@@ -46,12 +47,10 @@ export const register = async (req, res) => {
     const validation = registerSchema.safeParse(req.body);
 
     if (!validation.success) {
-      return res
-        .status(400)
-        .json({
-          message: "Invalid request body",
-          errors: validation.error.flatten().fieldErrors,
-        });
+      return res.status(400).json({
+        message: "Invalid request body",
+        errors: validation.error.flatten().fieldErrors,
+      });
     }
 
     const { name, email, password } = validation.data;
@@ -67,27 +66,48 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+    // Use a transaction to ensure everything happens or nothing happens
+    const { user, session } = await prisma.$transaction(async (tx) => {
+      // Create the user
+      const newUser = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      // Set up default preferences within the transaction
+      const preferencesToCreate = [];
+      
+      for (const [key, value] of Object.entries(DEFAULT_PREFERENCES)) {
+        preferencesToCreate.push({
+          userId: newUser.id,
+          key,
+          value
+        });
+      }
+      
+      await tx.userPreference.createMany({
+        data: preferencesToCreate
+      });
+
+      // Create session (adapted for transaction)
+      const newSession = await createUserSessionTx(tx, newUser.id, req);
+      
+      return { user: newUser, session: newSession };
     });
 
-    // Create enhanced session
-    const session = await createUserSession(user.id, req);
-
     const token = await createToken(user.id, session.id);
-
+    
     // Set the token in the cookie with the cookie options
     res.cookie("token", token, cookieOptions());
 
@@ -99,6 +119,23 @@ export const register = async (req, res) => {
     console.error("Error registering user:", error);
     res.status(500).json({ message: "Internal server error" });
   }
+};
+
+// Helper function for creating sessions within a transaction
+const createUserSessionTx = async (tx, userId, req) => {
+  const ipAddress = req.ip || req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+  const userAgent = req.headers["user-agent"];
+  
+  // Basic version for use within a transaction
+  return tx.userSession.create({
+    data: {
+      userId,
+      ipAddress,
+      userAgent,
+      isActive: true,
+      lastActivity: new Date()
+    }
+  });
 };
 
 export const login = async (req, res) => {

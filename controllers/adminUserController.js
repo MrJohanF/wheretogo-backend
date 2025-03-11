@@ -307,6 +307,11 @@ export const deleteUser = async (req, res) => {
         where: { userId: id }
       });
 
+      // Delete user's page views
+      await prisma.pageView.deleteMany({
+        where: { userId: id }
+      });
+
       // Finally delete the user
       await prisma.user.delete({
         where: { id }

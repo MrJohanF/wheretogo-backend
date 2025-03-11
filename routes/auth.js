@@ -20,6 +20,7 @@ import {
     deleteAllUserPreferences
 } from "../controllers/preferenceController.js";
 import { getFullUserProfile, updateProfile, createProfile } from "../controllers/userProfileController.js";
+import { ensurePreferences } from "../middleware/ensurePreferences.js";
 
 const router = express.Router();
 
@@ -32,10 +33,10 @@ const auth = [authMiddleware, activityLogger];
 
 // Protected routes
 router.post("/logout", ...auth, logout);
-router.get("/me", ...auth, me);
+router.get("/me", ...auth, ensurePreferences, me);
 
 // User profile route
-router.get("/profile/:userId", ...auth, getFullUserProfile);
+router.get("/profile/:userId", ...auth, ensurePreferences, getFullUserProfile);
 router.put("/profile/:userId", ...auth, updateProfile);
 
 // 2FA routes
