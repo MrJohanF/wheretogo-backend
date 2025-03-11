@@ -1,275 +1,30 @@
+// controllers/userProfileController.js
+
 import { prisma } from "../prisma/prisma.js";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
-// Validation schema for creating profile
-const createProfileSchema = z.object({
+
+
+const personalInfoSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email format"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  avatar: z.string().url("Invalid URL format").optional()
+  avatar: z.union([
+    z.string().url("Invalid URL format"), 
+    z.string().startsWith('data:image/'), // Accept data URLs for base64 images
+    z.null()
+  ]).optional()
 });
 
-// Validation schema for updating profile
-const updateProfileSchema = z.object({
-  name: z.string().min(1, "Name is required").optional(),
-  email: z.string().email("Invalid email format").optional(),
-  currentPassword: z.string().min(6).optional(),
-  newPassword: z.string().min(6, "Password must be at least 6 characters").optional(),
-  avatar: z.string().url("Invalid URL format").optional()
-}).refine(data => {
-  // If newPassword is provided, currentPassword must also be provided
-  if (data.newPassword && !data.currentPassword) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Current password is required to set new password",
-  path: ["currentPassword"]
+const passwordUpdateSchema = z.object({
+  currentPassword: z.string().min(6, "Current password is required"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters")
 });
 
-// Create a new user profile
-export const createProfile = async (req, res) => {
-  try {
-    const validation = createProfileSchema.safeParse(req.body);
-
-    if (!validation.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid request body",
-        errors: validation.error.flatten().fieldErrors
-      });
-    }
-
-    const { name, email, password, avatar } = validation.data;
-
-    // Check if email already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "Email is already registered"
-      });
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create user profile
-    const newUser = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        avatar,
-        role: "USER" // Default role
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        avatar: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-        twoFactorEnabled: true
-      }
-    });
-
-    // Record the activity
-    await prisma.userActivity.create({
-      data: {
-        userId: newUser.id,
-        action: "PROFILE_CREATED",
-        details: {
-          name: name,
-          email: email
-        }
-      }
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "Profile created successfully",
-      user: newUser
-    });
-
-  } catch (error) {
-    console.error("Error creating profile:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create profile",
-      error: error.message
-    });
-  }
-};
-
-// Update user's personal information
-export const updateProfile = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    
-    const validation = updateProfileSchema.safeParse(req.body);
-    
-    if (!validation.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid request body",
-        errors: validation.error.flatten().fieldErrors
-      });
-    }
-
-    const { name, email, currentPassword, newPassword, avatar } = validation.data;
-
-    // Get current user data
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        password: true,
-        avatar: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-        twoFactorEnabled: true
-      }
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found"
-      });
-    }
-
-    // Handle password update first
-    if (currentPassword || newPassword) {
-      // Both passwords must be provided together
-      if (!(currentPassword && newPassword)) {
-        return res.status(400).json({
-          success: false,
-          message: "Both current password and new password must be provided together"
-        });
-      }
-
-      // Verify current password
-      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
-      
-      if (!isPasswordValid) {
-        return res.status(401).json({
-          success: false,
-          message: "Current password is incorrect"
-        });
-      }
-
-      // If we get here, password is valid, prepare password update
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(newPassword, salt);
-      
-      // Update password
-      await prisma.user.update({
-        where: { id: userId },
-        data: { password: hashedPassword }
-      });
-
-      // Record password change activity
-      await prisma.userActivity.create({
-        data: {
-          userId,
-          action: "PASSWORD_CHANGE",
-          details: {
-            updatedFields: ["password"]
-          }
-        }
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: "Password updated successfully"
-      });
-    }
-
-    // Handle other profile updates
-    const updateData = {};
-    
-    if (name) updateData.name = name;
-    if (avatar) updateData.avatar = avatar;
-    
-    // Handle email update
-    if (email && email !== user.email) {
-      const emailExists = await prisma.user.findFirst({
-        where: {
-          email,
-          id: { not: userId }
-        }
-      });
-
-      if (emailExists) {
-        return res.status(400).json({
-          success: false,
-          message: "Email is already taken"
-        });
-      }
-      
-      updateData.email = email;
-    }
-
-    // Only proceed with update if there are fields to update
-    if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No fields to update"
-      });
-    }
-
-    // Update user profile
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        avatar: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-        twoFactorEnabled: true
-      }
-    });
-
-    // Record the activity
-    await prisma.userActivity.create({
-      data: {
-        userId,
-        action: "UPDATE_PROFILE",
-        details: {
-          updatedFields: Object.keys(updateData)
-        }
-      }
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Profile updated successfully",
-      user: updatedUser
-    });
-
-  } catch (error) {
-    console.error("Error updating profile:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update profile",
-      error: error.message
-    });
-  }
-};
+const securitySettingsSchema = z.object({
+  loginAlerts: z.boolean().optional()
+  // Add other security fields as needed
+});
 
 export const getFullUserProfile = async (req, res) => {
   try {
@@ -366,3 +121,339 @@ export const getFullUserProfile = async (req, res) => {
     });
   }
 }; 
+
+
+// Update personal information (name, email, avatar)
+export const updatePersonalInfo = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Authorize - only own profile or admin
+    if (userId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to update this profile"
+      });
+    }
+
+    // Validate request body
+    const validation = personalInfoSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request data",
+        errors: validation.error.flatten().fieldErrors
+      });
+    }
+
+    const { name, email, avatar } = validation.data;
+
+    // Check if email already exists (but not for this user)
+    if (email) {
+      const existingUser = await prisma.user.findUnique({ 
+        where: { email } 
+      });
+      
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already in use by another account"
+        });
+      }
+    }
+
+    // Update user
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name,
+        email,
+        avatar,
+        updatedAt: new Date()
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        updatedAt: true
+      }
+    });
+
+    // Log activity
+    await prisma.userActivity.create({
+      data: {
+        userId,
+        action: "PROFILE_UPDATE",
+        details: { fields: ["name", "email", "avatar"] }
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Personal information updated successfully",
+      data: updatedUser
+    });
+  } catch (error) {
+    console.error("Error updating personal info:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update personal information",
+      error: error.message
+    });
+  }
+};
+
+// Update password
+export const updatePassword = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Authorize - only own profile or admin
+    if (userId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to change this user's password"
+      });
+    }
+
+    // Validate request
+    const validation = passwordUpdateSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password data",
+        errors: validation.error.flatten().fieldErrors
+      });
+    }
+
+    const { currentPassword, newPassword } = validation.data;
+
+    // Get current user with password
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { password: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!isValidPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect"
+      });
+    }
+
+    // Hash new password and update
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+        updatedAt: new Date()
+      }
+    });
+
+    // Log activity (don't include password details!)
+    await prisma.userActivity.create({
+      data: {
+        userId,
+        action: "PASSWORD_UPDATE",
+        details: { timestamp: new Date() }
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully"
+    });
+  } catch (error) {
+    console.error("Error updating password:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update password",
+      error: error.message
+    });
+  }
+};
+
+// Update preferences (bulk update)
+export const updatePreferences = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Authorize
+    if (userId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to update these preferences"
+      });
+    }
+
+    // Get preferences from request body
+    const preferences = req.body;
+    if (!preferences || typeof preferences !== 'object' || Array.isArray(preferences)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid preferences format. Object expected."
+      });
+    }
+
+    // Start a transaction for bulk update
+    const results = await prisma.$transaction(async (tx) => {
+      const updatedPrefs = [];
+      
+      // Process each preference key/value pair
+      for (const [key, value] of Object.entries(preferences)) {
+        const updatedPref = await tx.userPreference.upsert({
+          where: {
+            userId_key: {
+              userId,
+              key
+            }
+          },
+          update: { value },
+          create: {
+            userId,
+            key,
+            value
+          },
+          select: {
+            key: true,
+            value: true,
+            updatedAt: true
+          }
+        });
+        updatedPrefs.push(updatedPref);
+      }
+      
+      return updatedPrefs;
+    });
+
+    // Log activity
+    await prisma.userActivity.create({
+      data: {
+        userId,
+        action: "PREFERENCES_UPDATE",
+        details: { 
+          keys: Object.keys(preferences),
+          timestamp: new Date()
+        }
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Preferences updated successfully",
+      data: results
+    });
+  } catch (error) {
+    console.error("Error updating preferences:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update preferences",
+      error: error.message
+    });
+  }
+};
+
+// Update security settings
+export const updateSecuritySettings = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Authorize
+    if (userId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to update security settings"
+      });
+    }
+
+    const validation = securitySettingsSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid security settings",
+        errors: validation.error.flatten().fieldErrors
+      });
+    }
+
+    const { loginAlerts } = validation.data;
+
+    // Update security settings in user preferences
+    let updatedSettings = {};
+    
+    // Only proceed if we have security preferences
+    const securityPreference = await prisma.userPreference.findUnique({
+      where: {
+        userId_key: {
+          userId,
+          key: "securityOptions"
+        }
+      }
+    });
+
+    let currentSettings = securityPreference?.value || {
+      twoFactorAuthentication: false,
+      loginAlerts: true
+    };
+
+    // Update only the provided fields
+    if (loginAlerts !== undefined) {
+      currentSettings.loginAlerts = loginAlerts;
+    }
+
+    // Save the updated settings
+    updatedSettings = await prisma.userPreference.upsert({
+      where: {
+        userId_key: {
+          userId,
+          key: "securityOptions"
+        }
+      },
+      update: {
+        value: currentSettings
+      },
+      create: {
+        userId,
+        key: "securityOptions",
+        value: currentSettings
+      }
+    });
+
+    // Log activity
+    await prisma.userActivity.create({
+      data: {
+        userId,
+        action: "SECURITY_SETTINGS_UPDATE",
+        details: { 
+          fields: Object.keys(validation.data),
+          timestamp: new Date()
+        }
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Security settings updated successfully",
+      data: updatedSettings
+    });
+  } catch (error) {
+    console.error("Error updating security settings:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update security settings",
+      error: error.message
+    });
+  }
+};

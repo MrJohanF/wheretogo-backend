@@ -1,9 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../prisma/prisma.js";
 import { preferenceSchema, preferenceKeySchema } from "../validation/preferenceSchema.js";
 import { DEFAULT_PREFERENCES } from "../utils/defaultPreferences.js";
 import { getUserPreferencesWithDefaults } from "../utils/userPreferences.js";
 
-const prisma = new PrismaClient();
 
 // Get all preferences for a user
 export const getUserPreferences = async (req, res) => {

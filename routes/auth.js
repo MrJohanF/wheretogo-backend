@@ -19,7 +19,13 @@ import {
     deleteUserPreference,
     deleteAllUserPreferences
 } from "../controllers/preferenceController.js";
-import { getFullUserProfile, updateProfile, createProfile } from "../controllers/userProfileController.js";
+import { 
+  getFullUserProfile, 
+  updatePersonalInfo,
+  updatePassword,
+  updatePreferences,
+  updateSecuritySettings
+} from "../controllers/userProfileController.js";
 import { ensurePreferences } from "../middleware/ensurePreferences.js";
 
 const router = express.Router();
@@ -37,7 +43,11 @@ router.get("/me", ...auth, ensurePreferences, me);
 
 // User profile route
 router.get("/profile/:userId", ...auth, ensurePreferences, getFullUserProfile);
-router.put("/profile/:userId", ...auth, updateProfile);
+router.put("/profile/:userId/personal", ...auth, updatePersonalInfo);
+router.put("/profile/:userId/password", ...auth, updatePassword);
+router.put("/profile/:userId/preferences", ...auth, updatePreferences);
+router.put("/profile/:userId/security", ...auth, updateSecuritySettings);
+
 
 // 2FA routes
 router.post("/2fa/setup", ...auth, setup2FA);
