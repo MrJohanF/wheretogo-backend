@@ -72,6 +72,11 @@ import {
   deleteFeature
 } from "../controllers/featureController.js";
 
+// Utils endpoints
+import {
+  deleteImageFromCloudinary
+} from "../utils/cloudinary.js";
+
 const router = express.Router();
 
 // Only check for admin privileges
@@ -133,5 +138,8 @@ router.get("/features", getAllFeatures);
 router.get("/features/:id", getFeatureById);
 router.put("/features/:id", updateFeature);
 router.delete("/features/:id", deleteFeature);
+
+// Utils endpoints
+router.delete("/cloudinary/delete", deleteImageFromCloudinary);
 
 export default router;
