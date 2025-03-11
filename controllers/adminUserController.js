@@ -297,6 +297,16 @@ export const deleteUser = async (req, res) => {
         where: { userId: id }
       });
 
+      // Delete user's sessions
+      await prisma.userSession.deleteMany({
+        where: { userId: id }
+      });
+
+      // Delete user's preferences
+      await prisma.userPreference.deleteMany({
+        where: { userId: id }
+      });
+
       // Finally delete the user
       await prisma.user.delete({
         where: { id }

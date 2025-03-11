@@ -2,12 +2,20 @@ import { prisma } from "../prisma/prisma.js";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
+// Validation schema for creating profile
+const createProfileSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  avatar: z.string().url("Invalid URL format").optional()
+});
+
 // Validation schema for updating profile
 const updateProfileSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
   email: z.string().email("Invalid email format").optional(),
   currentPassword: z.string().min(6).optional(),
-  newPassword: z.string().min(6, "Password must be at least 8 characters").optional(),
+  newPassword: z.string().min(6, "Password must be at least 6 characters").optional(),
   avatar: z.string().url("Invalid URL format").optional()
 }).refine(data => {
   // If newPassword is provided, currentPassword must also be provided
@@ -19,6 +27,86 @@ const updateProfileSchema = z.object({
   message: "Current password is required to set new password",
   path: ["currentPassword"]
 });
+
+// Create a new user profile
+export const createProfile = async (req, res) => {
+  try {
+    const validation = createProfileSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request body",
+        errors: validation.error.flatten().fieldErrors
+      });
+    }
+
+    const { name, email, password, avatar } = validation.data;
+
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is already registered"
+      });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user profile
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        avatar,
+        role: "USER" // Default role
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+        twoFactorEnabled: true
+      }
+    });
+
+    // Record the activity
+    await prisma.userActivity.create({
+      data: {
+        userId: newUser.id,
+        action: "PROFILE_CREATED",
+        details: {
+          name: name,
+          email: email
+        }
+      }
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Profile created successfully",
+      user: newUser
+    });
+
+  } catch (error) {
+    console.error("Error creating profile:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create profile",
+      error: error.message
+    });
+  }
+};
 
 // Update user's personal information
 export const updateProfile = async (req, res) => {

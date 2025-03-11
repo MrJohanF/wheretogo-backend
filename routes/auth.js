@@ -19,7 +19,7 @@ import {
     deleteUserPreference,
     deleteAllUserPreferences
 } from "../controllers/preferenceController.js";
-import { getFullUserProfile, updateProfile } from "../controllers/userProfileController.js";
+import { getFullUserProfile, updateProfile, createProfile } from "../controllers/userProfileController.js";
 
 const router = express.Router();
 
