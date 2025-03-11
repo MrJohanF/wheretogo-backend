@@ -31,7 +31,7 @@ router.post("/login", login);
 const auth = [authMiddleware, activityLogger];
 
 // Protected routes
-router.post("/logout", ...auth, logout);
+router.get("/logout", ...auth, logout);
 router.get("/me", ...auth, me);
 
 // User profile route
