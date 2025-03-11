@@ -1,4 +1,5 @@
 import { prisma } from "../prisma/prisma.js";
+import { deleteImageFromCloudinary } from '../utils/cloudinary.js';
 
 // Create a new category
 export const createCategory = async (req, res) => {
@@ -8,6 +9,7 @@ export const createCategory = async (req, res) => {
       icon,
       description,
       image,
+      imagePublicId,
       color,
       subcategories
     } = req.body;
@@ -29,6 +31,7 @@ export const createCategory = async (req, res) => {
           icon,
           description,
           image,
+          imagePublicId,
           color,
           count: 0, // Initialize count to 0
           isTrending: false // Initialize trending status to false
@@ -110,9 +113,31 @@ export const updateCategory = async (req, res) => {
       icon,
       description,
       image,
+      imagePublicId,
       color,
       isTrending
     } = req.body;
+
+      // Obtener la categoría actual para ver si hay que eliminar una imagen anterior
+      const currentCategory = await prisma.category.findUnique({
+        where: { id: parseInt(id) }
+      });
+
+
+       // Si la imagen ha cambiado y había una anterior, eliminarla de Cloudinary
+    if (
+      currentCategory?.imagePublicId && 
+      imagePublicId !== currentCategory.imagePublicId &&
+      image !== currentCategory.image // Verificamos que realmente cambió
+    ) {
+      try {
+        await deleteImageFromCloudinary(currentCategory.imagePublicId);
+        console.log(`Imagen anterior eliminada al actualizar categoría ${id}`);
+      } catch (cloudinaryError) {
+        console.error("Error al eliminar imagen anterior:", cloudinaryError);
+        // Continuamos con la actualización aunque falle la eliminación
+      }
+    }
 
     const updatedCategory = await prisma.category.update({
       where: { id: parseInt(id) },
@@ -121,6 +146,7 @@ export const updateCategory = async (req, res) => {
         icon,
         description,
         image,
+        imagePublicId,
         color,
         isTrending
       },
@@ -150,6 +176,23 @@ export const deleteCategory = async (req, res) => {
     const { id } = req.params;
     const categoryId = parseInt(id);
 
+    // Obtener la categoría para acceder al publicId de la imagen
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId }
+    });
+
+
+      // Eliminar la imagen de Cloudinary si existe
+      if (category?.imagePublicId) {
+        try {
+          await deleteImageFromCloudinary(category.imagePublicId);
+          console.log(`Imagen eliminada al borrar categoría ${id}`);
+        } catch (cloudinaryError) {
+          console.error("Error al eliminar imagen de Cloudinary:", cloudinaryError);
+          // Continuamos con la eliminación aunque falle la eliminación de la imagen
+        }
+      }
+
     // Use a transaction to ensure both operations succeed or fail together
     await prisma.$transaction(async (prisma) => {
       // First, delete all subcategories
@@ -177,3 +220,6 @@ export const deleteCategory = async (req, res) => {
     });
   }
 }; 
+
+
+
