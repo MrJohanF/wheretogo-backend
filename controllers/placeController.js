@@ -1,4 +1,5 @@
 import { prisma } from "../prisma/prisma.js";
+import { deleteImageFromCloudinary, extractPublicIdFromUrl } from "../utils/cloudinary.js";
 
 // Get all places
 export const getAllPlaces = async (req, res) => {
@@ -500,7 +501,10 @@ export const deletePlace = async (req, res) => {
 
     // Check if place exists
     const place = await prisma.place.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id) },
+      include: {
+        images: true // Include images to get their URLs
+      }
     });
 
     if (!place) {
@@ -508,6 +512,19 @@ export const deletePlace = async (req, res) => {
         success: false,
         message: "Place not found"
       });
+    }
+
+    // Extract Cloudinary publicIds from image URLs to delete them later
+    const imagePublicIds = [];
+    if (place.images && place.images.length > 0) {
+      for (const image of place.images) {
+        const publicId = extractPublicIdFromUrl(image.url);
+        if (publicId) {
+          imagePublicIds.push(publicId);
+        } else {
+          console.warn(`Could not extract publicId from image URL: ${image.url}`);
+        }
+      }
     }
 
     // Delete the place and all its relations in a transaction
@@ -555,9 +572,25 @@ export const deletePlace = async (req, res) => {
       });
     });
 
+    // After the database transaction is complete, delete the images from Cloudinary
+    const cloudinaryResults = [];
+    if (imagePublicIds.length > 0) {
+      console.log(`Deleting ${imagePublicIds.length} images from Cloudinary for place ID ${id}`);
+      for (const publicId of imagePublicIds) {
+        try {
+          const result = await deleteImageFromCloudinary(publicId);
+          cloudinaryResults.push({ publicId, success: result?.result === 'ok' });
+        } catch (err) {
+          console.error(`Error deleting image ${publicId} from Cloudinary:`, err);
+          cloudinaryResults.push({ publicId, success: false, error: err.message });
+        }
+      }
+    }
+
     return res.json({
       success: true,
-      message: "Place and all related records deleted successfully"
+      message: "Place and all related records deleted successfully",
+      cloudinaryResults: cloudinaryResults.length > 0 ? cloudinaryResults : undefined
     });
 
   } catch (error) {

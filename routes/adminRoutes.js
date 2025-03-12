@@ -73,7 +73,7 @@ import {
 } from "../controllers/featureController.js";
 
 // Utils endpoints
-import { deleteImage } from "../controllers/cloudinaryController.js";
+import { deleteImage, getPublicIdFromUrl } from "../controllers/cloudinaryController.js";
 
 const router = express.Router();
 
@@ -139,6 +139,6 @@ router.delete("/features/:id", deleteFeature);
 
 // Utils endpoints
 router.delete("/cloudinary", deleteImage);
-
+router.post("/cloudinary/extract-publicid", getPublicIdFromUrl);
 
 export default router;
