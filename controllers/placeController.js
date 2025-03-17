@@ -4,7 +4,71 @@ import { deleteImageFromCloudinary, extractPublicIdFromUrl } from "../utils/clou
 // Get all places
 export const getAllPlaces = async (req, res) => {
   try {
+    // Extract query parameters with defaults
+    const {
+      limit = 50,               // Number of places to return
+      page = 1,                 // Page number for pagination
+      featured = 'false',       // Filter for featured places
+      sort = 'name',            // Field to sort by
+      order = 'asc',            // Sort direction
+      categoryId,               // Filter by category ID
+      search,                   // Search term in name/description
+      minRating                 // Minimum rating filter
+    } = req.query;
+    
+    // Convert string parameters to appropriate types
+    const limitNum = parseInt(limit);
+    const pageNum = parseInt(page);
+    const skip = (pageNum - 1) * limitNum;
+    
+    // Build the filter conditions
+    const whereClause = {};
+    
+    // Filter by featured status - we'll use places with high ratings or manually curated
+    if (featured === 'true') {
+      // Here we'll use rating as a proxy for "featured" 
+      // Modify this based on how you want to determine featured places
+      whereClause.rating = {
+        gte: 4.5  // Places with rating of 4.5 or higher
+      };
+      
+      // Alternative approach: If you have a specific field for featured places
+      // whereClause.isFeatured = true;
+    }
+    
+    // Filter by category if specified
+    if (categoryId) {
+      whereClause.categories = {
+        some: {
+          categoryId: parseInt(categoryId)
+        }
+      };
+    }
+    
+    // Filter by minimum rating if specified
+    if (minRating) {
+      whereClause.rating = {
+        gte: parseFloat(minRating)
+      };
+    }
+    
+    // Add search filter if specified
+    if (search) {
+      whereClause.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Get total count for pagination info
+    const totalCount = await prisma.place.count({
+      where: whereClause
+    });
+
+    // Fetch places with all the applied filters
     const places = await prisma.place.findMany({
+      where: whereClause,
       include: {
         categories: {
           include: {
@@ -36,13 +100,22 @@ export const getAllPlaces = async (req, res) => {
         }
       },
       orderBy: {
-        name: 'asc'
-      }
+        [sort]: order
+      },
+      skip: skip,
+      take: limitNum
     });
 
+    // Return paginated results with metadata
     return res.json({
       success: true,
-      places
+      places,
+      pagination: {
+        total: totalCount,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(totalCount / limitNum)
+      }
     });
 
   } catch (error) {
